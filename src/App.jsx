@@ -49,16 +49,31 @@ async function getAdvice(gastos) {
 }
 
 function jsonp(params) {
-  return new Promise((resolve, reject) => {
-    const cb = "cb_" + Date.now();
-    const script = document.createElement("script");
+ return new Promise((resolve, reject) => {
+    const cb = "cb_" + Math.random().toString(36).slice(2);
     const query = Object.entries({ ...params, callback: cb })
       .map(([k, v]) => `${k}=${encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : v)}`)
       .join("&");
+    const script = document.createElement("script");
     script.src = `${SCRIPT_URL}?${query}`;
-    script.onerror = () => reject(new Error("Error de red"));
-    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
+    script.onerror = (e) => {
+      delete window[cb];
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error("Error de red"));
+    };
+    window[cb] = (data) => {
+      delete window[cb];
+      if (script.parentNode) document.body.removeChild(script);
+      resolve(data);
+    };
     document.body.appendChild(script);
+    setTimeout(() => {
+      if (window[cb]) {
+        delete window[cb];
+        if (script.parentNode) document.body.removeChild(script);
+        reject(new Error("Timeout"));
+      }
+    }, 10000);
   });
 }
 
