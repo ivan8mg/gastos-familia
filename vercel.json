@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/sheet.js": {
+      "runtime": "node"
+    }
+  }
+}
