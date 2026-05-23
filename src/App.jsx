@@ -48,13 +48,22 @@ async function getAdvice(gastos) {
   } catch { return ""; }
 }
 
-async function sheetRequest(payload) {
-  const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-  return res.json();
+function jsonp(params) {
+  return new Promise((resolve, reject) => {
+    const cb = "cb_" + Date.now();
+    const script = document.createElement("script");
+    const query = Object.entries({ ...params, callback: cb })
+      .map(([k, v]) => `${k}=${encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : v)}`)
+      .join("&");
+    script.src = `${SCRIPT_URL}?${query}`;
+    script.onerror = () => reject(new Error("Error de red"));
+    window[cb] = (data) => { delete window[cb]; document.body.removeChild(script); resolve(data); };
+    document.body.appendChild(script);
+  });
 }
 
 async function cargarDeSheet() {
-  const data = await sheetRequest({ action: "leer" });
+  const data = await jsonp({ action: "leer" });
   if (!data.gastos) return [];
   return data.gastos.map((row, i) => ({
     id: i + 1, fecha: row[0], monto: parseFloat(row[1]) || 0,
@@ -63,13 +72,12 @@ async function cargarDeSheet() {
 }
 
 async function guardarEnSheet(gasto) {
-  return sheetRequest({ action: "agregar", fila: [gasto.fecha, gasto.monto, gasto.motivo, gasto.metodo, gasto.categoria, gasto.quien] });
+  return jsonp({ action: "agregar", fila: [gasto.fecha, gasto.monto, gasto.motivo, gasto.metodo, gasto.categoria, gasto.quien] });
 }
 
 async function eliminarDeSheet(index) {
-  return sheetRequest({ action: "eliminar", index });
+  return jsonp({ action: "eliminar", index });
 }
-
 export default function App() {
   const [gastos, setGastos] = useState([]);
   const [monto, setMonto] = useState("");
