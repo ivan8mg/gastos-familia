@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGaAac_P6oRPSW1PJmkeCT0j6s5epRBP9SVHhEfYMGw2POZoe-4wRAKhswArw9OuDu/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxt2GkXr4v2-xujmgVvhzd-F3vfGMYJo4jRqqwjp-HB1sinC77AuLQX0Tqgy03nDVea/exec";
 
 const METHODS = [
   { id: "debito",   emoji: "💳", label: "Débito"   },
