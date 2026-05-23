@@ -5,8 +5,8 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxt2GkXr4v2-xujmgVvhzd-F3vfGMYJo4jRqqwjp-HB1sinC77AuLQX0Tqgy03nDVea/exec";
-
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwH7tXLwQezNaC_F1cozTpqVNnnMVUzZ_PF6oLUX2_XsbSfbzirTTuOfhTAYZLs4-yu/exec";
+  
   try {
     const body = JSON.stringify(req.body);
     
