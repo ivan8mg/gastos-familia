@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxt2GkXr4v2-xujmgVvhzd-F3vfGMYJo4jRqqwjp-HB1sinC77AuLQX0Tqgy03nDVea/exec";
+const SCRIPT_URL = "/api/sheet";
 
 const METHODS = [
   { id: "debito",   emoji: "💳", label: "Débito"   },
@@ -48,37 +48,17 @@ async function getAdvice(gastos) {
   } catch { return ""; }
 }
 
-function jsonp(params) {
- return new Promise((resolve, reject) => {
-    const cb = "cb_" + Math.random().toString(36).slice(2);
-    const query = Object.entries({ ...params, callback: cb })
-      .map(([k, v]) => `${k}=${encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : v)}`)
-      .join("&");
-    const script = document.createElement("script");
-    script.src = `${SCRIPT_URL}?${query}`;
-    script.onerror = (e) => {
-      delete window[cb];
-      if (script.parentNode) document.body.removeChild(script);
-      reject(new Error("Error de red"));
-    };
-    window[cb] = (data) => {
-      delete window[cb];
-      if (script.parentNode) document.body.removeChild(script);
-      resolve(data);
-    };
-    document.body.appendChild(script);
-    setTimeout(() => {
-      if (window[cb]) {
-        delete window[cb];
-        if (script.parentNode) document.body.removeChild(script);
-        reject(new Error("Timeout"));
-      }
-    }, 10000);
+async function sheetRequest(payload) {
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
+  return res.json();
 }
 
 async function cargarDeSheet() {
-  const data = await jsonp({ action: "leer" });
+  const data = await sheetRequest({ action: "leer" });
   if (!data.gastos) return [];
   return data.gastos.map((row, i) => ({
     id: i + 1, fecha: row[0], monto: parseFloat(row[1]) || 0,
@@ -87,11 +67,11 @@ async function cargarDeSheet() {
 }
 
 async function guardarEnSheet(gasto) {
-  return jsonp({ action: "agregar", fila: [gasto.fecha, gasto.monto, gasto.motivo, gasto.metodo, gasto.categoria, gasto.quien] });
+  return sheetRequest({ action: "agregar", fila: [gasto.fecha, gasto.monto, gasto.motivo, gasto.metodo, gasto.categoria, gasto.quien] });
 }
 
 async function eliminarDeSheet(index) {
-  return jsonp({ action: "eliminar", index });
+  return sheetRequest({ action: "eliminar", index });
 }
 export default function App() {
   const [gastos, setGastos] = useState([]);
